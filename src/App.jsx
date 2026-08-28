@@ -248,9 +248,9 @@ function StepDone() {
           <path d="M5 13l4 4L19 7" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <h2 className="text-[22px] font-light tracking-tight mb-3">신청이 완료되었습니다</h2>
+      <h2 className="text-[22px] font-light tracking-tight mb-3">설문이 완료되었습니다</h2>
       <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-        담당 어드바이저가 빠른 시일 내에<br />연락드리겠습니다
+        소중한 시간 내어 주셔서 감사합니다
       </p>
     </div>
   )
@@ -409,7 +409,7 @@ export default function App() {
               border: canNext[step] ? 'none' : '1px solid var(--color-border)',
             }}
           >
-            {isTerms ? '프라이빗 세션 신청하기' : '다음'}
+            {isTerms ? '설문 제출하기' : '다음'}
           </button>
         </div>
       )}
