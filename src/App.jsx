@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 
-const GOOGLE_SCRIPT_URL = '' // ponytail: Google Apps Script 웹앱 URL, 연동 시 채울 것
+const GOOGLE_SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || ''
 
 const BASE = import.meta.env.BASE_URL
 
