@@ -380,11 +380,10 @@ export default function App() {
     if (GOOGLE_SCRIPT_URL) {
       try {
         await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST', mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
           body: JSON.stringify(payload),
         })
-      } catch { /* ponytail: fire-and-forget */ }
+      } catch { /* ponytail: CORS 리다이렉트 에러 무시, 데이터는 들어감 */ }
     }
 
     setDone(true)
