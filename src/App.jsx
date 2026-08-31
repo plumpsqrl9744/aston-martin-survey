@@ -1,19 +1,25 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 const GOOGLE_SCRIPT_URL = '' // ponytail: Google Apps Script 웹앱 URL, 연동 시 채울 것
 
+const BASE = import.meta.env.BASE_URL
+
 const MODELS = [
-  { id: 'vantage-s', name: 'Vantage S', img: null },
-  { id: 'db12-s', name: 'DB12 S', img: null },
-  { id: 'dbx707', name: 'DBX707', img: null },
+  { id: 'vantage-s', name: 'VANTAGE S', sub: 'Front-engine V8 · 665 PS', img: `${BASE}images/vantage.png` },
+  { id: 'db12-s', name: 'DB12 S', sub: 'Super Tourer · 700 PS', img: `${BASE}images/db12.png` },
+  { id: 'dbx707', name: 'DBX707', sub: 'Luxury SUV · 707 PS', img: `${BASE}images/dbx707.png` },
 ]
 
-const EMAIL_DOMAINS = ['@naver.com', '@gmail.com', '@kakao.com']
+const EMAIL_DOMAINS = ['@naver.com', '@gmail.com', '@daum.net', '@kakao.com']
 
 const TERMS = [
   { id: 'privacy', label: '개인정보 수집 및 이용 동의', required: true },
-  { id: 'marketing', label: '마케팅 정보 수신 동의', required: false },
+  { id: 'thirdParty', label: '공식 딜러사 제3자 제공 동의', required: true },
+  { id: 'marketing', label: '마케팅 및 프라이빗 이벤트 정보 수신', required: false },
 ]
+
+const STEPS = ['model', 'name', 'phone', 'birth', 'email', 'consent']
+const EXPAND_RATIO = 6
 
 function formatPhone(v) {
   const d = v.replace(/\D/g, '').slice(0, 11)
@@ -23,101 +29,119 @@ function formatPhone(v) {
 }
 
 function formatBirth(v) {
-  return v.replace(/\D/g, '').slice(0, 8)
+  const d = v.replace(/\D/g, '').slice(0, 8)
+  if (d.length <= 4) return d
+  if (d.length <= 6) return `${d.slice(0, 4)}.${d.slice(4)}`
+  return `${d.slice(0, 4)}.${d.slice(4, 6)}.${d.slice(6)}`
 }
 
 // -- Steps --
 
 function StepModel({ value, onChange }) {
+  const flexFor = (id) => value === id ? EXPAND_RATIO : value ? 1 : 2
+  const onFor = (id) => value === id ? 1 : 0
+
   return (
-    <div>
-      <h2 className="text-[22px] font-light tracking-tight mb-2">
-        어떤 모델에 가장 관심이 가시나요?
-      </h2>
-      <p className="text-sm mb-8" style={{ color: 'var(--color-text-muted)' }}>
-        관심 차종을 선택해 주세요
-      </p>
-      <div className="grid grid-cols-1 gap-3">
-        {MODELS.map((m) => {
-          const selected = value === m.id
-          return (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => onChange(m.id)}
-              className="relative rounded-lg overflow-hidden transition-colors duration-200"
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <div style={{ padding: '26px 24px 22px' }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.22em', color: '#525866', marginBottom: 14 }}>MODEL</div>
+        <div style={{ fontSize: 23, lineHeight: 1.45, fontWeight: 500, letterSpacing: '-0.01em' }}>
+          어떤 모델에<br />가장 관심이 가시나요?
+        </div>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        {MODELS.map((m) => (
+          <div
+            key={m.id}
+            onClick={() => onChange(m.id)}
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              cursor: 'pointer',
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              transition: 'flex-grow .5s cubic-bezier(.4,0,.2,1)',
+              flex: `${flexFor(m.id)} 1 0`,
+              minHeight: 58,
+            }}
+          >
+            {/* 차량 이미지 */}
+            <img
+              src={m.img} alt={m.name}
               style={{
-                background: selected ? 'rgba(0,108,98,0.15)' : 'var(--color-surface)',
-                border: selected
-                  ? '1px solid rgba(0,108,98,0.4)'
-                  : '1px solid var(--color-border)',
+                position: 'absolute', inset: 0, width: '100%', height: '100%',
+                objectFit: 'cover', objectPosition: 'center 60%',
+                transition: 'opacity .6s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1)',
+                opacity: onFor(m.id),
+                transform: value === m.id ? 'scale(1.06)' : 'scale(1.12)',
               }}
-            >
-              {/* placeholder 이미지 영역 */}
-              <div
-                className="w-full flex items-center justify-center"
-                style={{
-                  height: 160,
-                  background: selected
-                    ? 'rgba(0,108,98,0.08)'
-                    : 'rgba(255,255,255,0.02)',
-                }}
-              >
-                {m.img ? (
-                  <img src={m.img} alt={m.name} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    {m.name}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <span
-                  className="text-[15px] font-medium"
-                  style={{ color: selected ? 'var(--color-primary)' : 'var(--color-text-main)' }}
-                >
-                  {m.name}
-                </span>
-                {selected && (
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <circle cx="9" cy="9" r="9" fill="var(--color-primary)" />
-                    <path d="M5.5 9.2L7.8 11.5L12.5 6.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </div>
-            </button>
-          )
-        })}
+            />
+            {/* 그라데이션 오버레이 */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(180deg, rgba(9,10,10,0.6) 0%, rgba(9,10,10,0.1) 40%, rgba(9,10,10,0.85) 100%)',
+              pointerEvents: 'none',
+              transition: 'opacity .5s ease',
+              opacity: onFor(m.id),
+            }} />
+            {/* 모델명 */}
+            <div style={{
+              position: 'absolute', left: 24, top: 0, height: 58,
+              display: 'flex', alignItems: 'center', gap: 12, pointerEvents: 'none',
+            }}>
+              <div style={{
+                width: 5, height: 5, borderRadius: '50%', background: '#006c62',
+                transition: 'opacity .4s ease', opacity: onFor(m.id),
+              }} />
+              <div style={{ fontSize: 15, letterSpacing: '0.2em', fontWeight: 400 }}>{m.name}</div>
+            </div>
+            {/* 서브텍스트 */}
+            <div style={{
+              position: 'absolute', left: 24, right: 24, bottom: 20,
+              pointerEvents: 'none', transition: 'opacity .45s ease', opacity: onFor(m.id),
+            }}>
+              <div style={{ fontSize: 12, letterSpacing: '0.04em', color: '#7ab6af' }}>{m.sub}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
 }
 
-function StepInput({ label, sub, value, onChange, type = 'text', placeholder, inputMode }) {
+function StepInput({ tag, label, hint, value, onChange, onEnter, type = 'text', inputMode, placeholder }) {
   const ref = useRef(null)
   useEffect(() => { ref.current?.focus() }, [])
 
   return (
-    <div>
-      <h2 className="text-[22px] font-light tracking-tight mb-2">{label}</h2>
-      {sub && (
-        <p className="text-sm mb-10" style={{ color: 'var(--color-text-muted)' }}>{sub}</p>
-      )}
+    <div style={{ padding: '26px 24px 0', animation: 'amIn .22s ease both' }}>
+      <div style={{ fontSize: 11, letterSpacing: '0.22em', color: '#525866', marginBottom: 14 }}>{tag}</div>
+      <div style={{ fontSize: 23, lineHeight: 1.45, fontWeight: 500, marginBottom: 44 }}>{label}</div>
       <input
         ref={ref}
         type={type}
         inputMode={inputMode}
         value={value}
         onChange={onChange}
+        onKeyDown={(e) => { if (e.key === 'Enter' && onEnter) onEnter() }}
         placeholder={placeholder}
-        className="w-full text-[20px] font-light pb-3 bg-transparent transition-colors duration-200"
-        style={{ borderBottom: '1px solid var(--color-border)', caretColor: 'var(--color-primary)' }}
+        style={{
+          width: '100%', background: 'transparent', border: 'none',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          padding: '0 0 14px', fontFamily: 'inherit',
+          fontSize: 22, fontWeight: 400, color: '#f5f5f7',
+          letterSpacing: type === 'tel' ? '0.04em' : '0.01em',
+          fontVariantNumeric: inputMode === 'numeric' || type === 'tel' ? 'tabular-nums' : undefined,
+          transition: 'border-color .25s ease',
+        }}
       />
+      {hint && (
+        <div style={{ marginTop: 16, fontSize: 12, color: '#525866', letterSpacing: '0.01em' }}>{hint}</div>
+      )}
     </div>
   )
 }
 
-function StepEmail({ value, onChange }) {
+function StepEmail({ value, onChange, onEnter }) {
   const ref = useRef(null)
   useEffect(() => { ref.current?.focus() }, [])
 
@@ -126,44 +150,53 @@ function StepEmail({ value, onChange }) {
     if (local) onChange({ target: { value: local + domain } })
   }
 
+  const showDomains = !value.includes('@') || value.endsWith('@')
+
   return (
-    <div>
-      <h2 className="text-[22px] font-light tracking-tight mb-2">이메일 주소를 입력해 주세요</h2>
-      <p className="text-sm mb-10" style={{ color: 'var(--color-text-muted)' }}>
-        시승 안내를 받으실 이메일입니다
-      </p>
+    <div style={{ padding: '26px 24px 0', animation: 'amIn .22s ease both' }}>
+      <div style={{ fontSize: 11, letterSpacing: '0.22em', color: '#525866', marginBottom: 14 }}>EMAIL</div>
+      <div style={{ fontSize: 23, lineHeight: 1.45, fontWeight: 500, marginBottom: 44 }}>이메일 주소를 입력해 주세요</div>
       <input
         ref={ref}
         type="email"
+        inputMode="email"
+        autoCapitalize="off"
+        autoComplete="off"
         value={value}
         onChange={onChange}
-        placeholder="example@email.com"
-        className="w-full text-[20px] font-light pb-3 bg-transparent transition-colors duration-200"
-        style={{ borderBottom: '1px solid var(--color-border)', caretColor: 'var(--color-primary)' }}
+        onKeyDown={(e) => { if (e.key === 'Enter' && onEnter) onEnter() }}
+        placeholder="name@example.com"
+        style={{
+          width: '100%', background: 'transparent', border: 'none',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          padding: '0 0 14px', fontFamily: 'inherit',
+          fontSize: 20, fontWeight: 400, color: '#f5f5f7',
+          transition: 'border-color .25s ease',
+        }}
       />
-      <div className="flex gap-2 mt-4 flex-wrap">
-        {EMAIL_DOMAINS.map((d) => (
-          <button
-            key={d}
-            type="button"
-            onClick={() => handleQuick(d)}
-            className="text-xs px-3 py-1.5 rounded-full transition-colors duration-200"
-            style={{
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              color: 'var(--color-text-muted)',
-            }}
-          >
-            {d}
-          </button>
-        ))}
-      </div>
+      {showDomains && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
+          {EMAIL_DOMAINS.map((d) => (
+            <div
+              key={d}
+              onClick={() => handleQuick(d)}
+              style={{
+                padding: '8px 13px',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 2, fontSize: 12, color: '#7ab6af',
+                cursor: 'pointer', transition: 'border-color .2s ease, color .2s ease',
+              }}
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
-function StepTerms({ agreed, onToggle }) {
-  const allRequired = TERMS.filter((t) => t.required).every((t) => agreed[t.id])
+function StepConsent({ agreed, onToggle }) {
   const allChecked = TERMS.every((t) => agreed[t.id])
 
   const toggleAll = () => {
@@ -174,91 +207,115 @@ function StepTerms({ agreed, onToggle }) {
   }
 
   return (
-    <div>
-      <h2 className="text-[22px] font-light tracking-tight mb-2">수신 동의를 확인해 주세요</h2>
-      <p className="text-sm mb-10" style={{ color: 'var(--color-text-muted)' }}>
-        원활한 안내를 위해 동의가 필요합니다
-      </p>
+    <div style={{ padding: '26px 24px 0', animation: 'amIn .22s ease both' }}>
+      <div style={{ fontSize: 11, letterSpacing: '0.22em', color: '#525866', marginBottom: 14 }}>CONSENT</div>
+      <div style={{ fontSize: 23, lineHeight: 1.45, fontWeight: 500, marginBottom: 36 }}>수신 동의를 확인해 주세요</div>
 
-      {/* 전체 동의 */}
-      <button
-        type="button"
+      {/* 전체 동의 토글 */}
+      <div
         onClick={toggleAll}
-        className="w-full flex items-center gap-3 py-4 px-4 rounded-lg mb-3 transition-colors duration-200"
         style={{
-          background: allChecked ? 'rgba(0,108,98,0.1)' : 'var(--color-surface)',
-          border: allChecked ? '1px solid rgba(0,108,98,0.3)' : '1px solid var(--color-border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+          padding: '18px 0',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          cursor: 'pointer',
         }}
       >
-        <div
-          className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-200"
-          style={{
-            background: allChecked ? 'var(--color-primary)' : 'transparent',
-            border: allChecked ? 'none' : '1.5px solid var(--color-text-muted)',
-          }}
-        >
-          {allChecked && (
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2.5 6.2L5 8.5L9.5 3.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
+        <div style={{ fontSize: 15, fontWeight: 500, letterSpacing: '0.01em' }}>전체 동의하기</div>
+        <div style={{
+          position: 'relative', width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+          transition: 'background .3s ease',
+          background: allChecked ? '#006c62' : '#121416',
+        }}>
+          <div style={{
+            position: 'absolute', top: 3, width: 18, height: 18, borderRadius: '50%',
+            background: '#f5f5f7',
+            transition: 'left .3s cubic-bezier(.4,0,.2,1)',
+            left: allChecked ? 23 : 3,
+          }} />
         </div>
-        <span className="text-[15px] font-medium">전체 동의하기</span>
-      </button>
+      </div>
 
-      <div className="space-y-1">
+      {/* 개별 항목 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 8 }}>
         {TERMS.map((t) => (
-          <button
+          <div
             key={t.id}
-            type="button"
             onClick={() => onToggle({ ...agreed, [t.id]: !agreed[t.id] })}
-            className="w-full flex items-center gap-3 py-3 px-4"
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', cursor: 'pointer' }}
           >
-            <div
-              className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors duration-200"
-              style={{
-                background: agreed[t.id] ? 'var(--color-primary)' : 'transparent',
-                border: agreed[t.id] ? 'none' : '1.5px solid var(--color-text-muted)',
-              }}
-            >
-              {agreed[t.id] && (
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                  <path d="M2.5 6.2L5 8.5L9.5 3.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
+            <div style={{
+              width: 18, height: 18, borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.14)', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <div style={{
+                width: 8, height: 8, borderRadius: '50%', background: '#006c62',
+                transition: 'opacity .2s ease', opacity: agreed[t.id] ? 1 : 0,
+              }} />
             </div>
-            <span className="text-[13px]" style={{ color: 'var(--color-text-muted)' }}>
-              {t.required ? '[필수] ' : '[선택] '}{t.label}
-            </span>
-          </button>
+            <div style={{ fontSize: 13, color: '#525866', letterSpacing: '0.01em' }}>
+              {t.required
+                ? <><span style={{ color: '#7ab6af' }}>[필수]</span> {t.label}</>
+                : `[선택] ${t.label}`
+              }
+            </div>
+          </div>
         ))}
+      </div>
+
+      {/* 법적 안내 */}
+      <div style={{
+        marginTop: 26, padding: '18px 0 30px',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        fontSize: 11, lineHeight: 1.85, color: '#525866',
+      }}>
+        수집 항목: 성함, 연락처, 생년월일, 이메일 · 보유 기간: 수집일로부터 1년<br />
+        동의를 거부하실 수 있으나, 이 경우 상담 안내가 제한됩니다.
       </div>
     </div>
   )
 }
 
-function StepDone() {
+function StepDone({ onReset }) {
   return (
-    <div className="flex flex-col items-center justify-center pt-20 text-center">
-      <div
-        className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
-        style={{ background: 'rgba(0,108,98,0.15)' }}
-      >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-          <path d="M5 13l4 4L19 7" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 40,
+      background: 'rgba(9,10,10,0.92)', backdropFilter: 'blur(6px)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: '0 34px', textAlign: 'center',
+      animation: 'amFade .28s ease both',
+    }}>
+      <div style={{
+        width: 48, height: 48, borderRadius: '50%',
+        border: '1px solid rgba(122,182,175,0.4)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 30,
+      }}>
+        <svg width="18" height="13" viewBox="0 0 18 13" fill="none">
+          <path d="M1 6.5L6.5 12L17 1" stroke="#7ab6af" strokeWidth="1.2" />
         </svg>
       </div>
-      <h2 className="text-[22px] font-light tracking-tight mb-3">설문이 완료되었습니다</h2>
-      <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-        소중한 시간 내어 주셔서 감사합니다
-      </p>
+      <div style={{ fontSize: 10, letterSpacing: '0.42em', color: '#7ab6af', marginBottom: 20 }}>REQUEST RECEIVED</div>
+      <div style={{ fontSize: 21, fontWeight: 500, lineHeight: 1.5, marginBottom: 16 }}>신청이 접수되었습니다</div>
+      <div style={{ fontSize: 13, lineHeight: 1.9, color: '#525866' }}>
+        담당 세일즈 컨설턴트가 영업일 1일 내<br />입력하신 연락처로 안내드립니다.
+      </div>
+      <div
+        onClick={onReset}
+        style={{
+          marginTop: 44, fontSize: 12, letterSpacing: '0.14em', color: '#525866',
+          borderBottom: '1px solid rgba(255,255,255,0.14)', paddingBottom: 6, cursor: 'pointer',
+        }}
+      >
+        처음으로
+      </div>
     </div>
   )
 }
 
 // -- Main --
-
-const TOTAL_STEPS = 7 // model, name, phone, birth, email, terms, done
 
 export default function App() {
   const [step, setStep] = useState(0)
@@ -268,34 +325,54 @@ export default function App() {
   const [birth, setBirth] = useState('')
   const [email, setEmail] = useState('')
   const [agreed, setAgreed] = useState({})
+  const [done, setDone] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [fade, setFade] = useState(true)
+  const [kbOffset, setKbOffset] = useState(0)
 
-  const goNext = () => {
-    setFade(false)
-    setTimeout(() => { setStep((s) => s + 1); setFade(true) }, 150)
-  }
+  // 키보드 감지
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const handler = () => {
+      setKbOffset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
+    }
+    vv.addEventListener('resize', handler)
+    vv.addEventListener('scroll', handler)
+    return () => {
+      vv.removeEventListener('resize', handler)
+      vv.removeEventListener('scroll', handler)
+    }
+  }, [])
 
-  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  const requiredAgreed = TERMS.filter((t) => t.required).every((t) => agreed[t.id])
+  const key = STEPS[step]
+  const isLast = key === 'consent'
+  const progress = `${Math.round(((step + 1) / STEPS.length) * 100)}%`
 
-  const canNext = [
-    !!model,
-    name.trim().length >= 2,
-    phone.replace(/\D/g, '').length === 11,
-    birth.length === 8,
-    validEmail,
-    requiredAgreed,
-  ]
+  const valid = (() => {
+    switch (key) {
+      case 'model': return !!model
+      case 'name': return name.trim().length >= 2
+      case 'phone': return phone.replace(/\D/g, '').length === 11
+      case 'birth': return birth.replace(/\D/g, '').length === 8
+      case 'email': return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email.trim())
+      case 'consent': return !!(agreed.privacy && agreed.thirdParty)
+      default: return false
+    }
+  })()
+
+  const go = useCallback((n) => setStep(Math.max(0, Math.min(STEPS.length - 1, n))), [])
+  const goNext = () => { if (valid) go(step + 1) }
+  const goBack = () => { if (step > 0) go(step - 1) }
 
   const submit = async () => {
-    if (submitting) return
+    if (submitting || !valid) return
     setSubmitting(true)
 
     const payload = {
       model: MODELS.find((m) => m.id === model)?.name,
       name, phone, birth, email,
       privacy: agreed.privacy ? 'Y' : 'N',
+      thirdParty: agreed.thirdParty ? 'Y' : 'N',
       marketing: agreed.marketing ? 'Y' : 'N',
       timestamp: new Date().toISOString(),
     }
@@ -303,116 +380,189 @@ export default function App() {
     if (GOOGLE_SCRIPT_URL) {
       try {
         await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
+          method: 'POST', mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         })
-      } catch { /* ponytail: no-cors POST fire-and-forget, 실패해도 완료 화면 보여줌 */ }
+      } catch { /* ponytail: fire-and-forget */ }
     }
 
-    goNext()
+    setDone(true)
     setSubmitting(false)
   }
 
-  const isDone = step === TOTAL_STEPS - 1
-  const isTerms = step === TOTAL_STEPS - 2
-  const progress = step / (TOTAL_STEPS - 1)
+  const reset = () => {
+    setStep(0); setModel(''); setName(''); setPhone(''); setBirth('')
+    setEmail(''); setAgreed({}); setDone(false)
+  }
 
   return (
-    <div className="min-h-dvh flex flex-col relative" style={{ background: 'var(--color-bg)' }}>
+    <div style={{
+      position: 'relative', width: '100%', maxWidth: 480,
+      height: '100dvh', margin: '0 auto',
+      background: '#090a0a', color: '#f5f5f7',
+      fontFamily: 'Pretendard, -apple-system, sans-serif',
+      overflow: 'hidden',
+    }}>
       {/* Progress bar */}
-      {!isDone && (
-        <div className="fixed top-0 left-0 right-0 z-50" style={{ height: 2, background: 'var(--color-border)' }}>
-          <div
-            className="h-full transition-all duration-500 ease-out"
-            style={{ width: `${progress * 100}%`, background: 'var(--color-primary)' }}
-          />
-        </div>
-      )}
-
-      {/* Logo */}
-      {!isDone && (
-        <div className="pt-14 pb-4 px-6 flex items-center justify-center">
-          {/* ponytail: placeholder 로고, 실제 로고 이미지로 교체할 것 */}
-          <span className="text-[11px] tracking-[3px] uppercase" style={{ color: 'var(--color-text-muted)' }}>
-            Aston Martin Suwon
-          </span>
-        </div>
-      )}
-
-      {/* Back */}
-      {step > 0 && !isDone && (
-        <button
-          type="button"
-          onClick={() => { setFade(false); setTimeout(() => { setStep((s) => s - 1); setFade(true) }, 150) }}
-          className="absolute top-12 left-5 z-40 p-2"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M13 4L7 10L13 16" stroke="var(--color-text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      )}
-
-      {/* Content */}
-      <div
-        className="flex-1 px-6 pt-6 pb-32 transition-opacity duration-200"
-        style={{ opacity: fade ? 1 : 0 }}
-      >
-        {step === 0 && <StepModel value={model} onChange={setModel} />}
-        {step === 1 && (
-          <StepInput
-            label="성함을 입력해 주세요"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="홍길동"
-          />
-        )}
-        {step === 2 && (
-          <StepInput
-            label="안내받으실 연락처를 입력해 주세요"
-            value={phone}
-            onChange={(e) => setPhone(formatPhone(e.target.value))}
-            type="tel"
-            inputMode="tel"
-            placeholder="010-0000-0000"
-          />
-        )}
-        {step === 3 && (
-          <StepInput
-            label="생년월일 8자리를 입력해 주세요"
-            sub="YYYYMMDD"
-            value={birth}
-            onChange={(e) => setBirth(formatBirth(e.target.value))}
-            inputMode="numeric"
-            placeholder="19900101"
-          />
-        )}
-        {step === 4 && (
-          <StepEmail value={email} onChange={(e) => setEmail(e.target.value)} />
-        )}
-        {step === 5 && <StepTerms agreed={agreed} onToggle={setAgreed} />}
-        {step === 6 && <StepDone />}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.08)', zIndex: 20 }}>
+        <div style={{ height: 1, background: '#006c62', transition: 'width .4s cubic-bezier(.4,0,.2,1)', width: progress }} />
       </div>
 
-      {/* Bottom button */}
-      {!isDone && (
-        <div className="fixed bottom-0 left-0 right-0 p-5 z-40" style={{ background: 'linear-gradient(transparent, var(--color-bg) 30%)' }}>
-          <button
-            type="button"
-            disabled={!canNext[step]}
-            onClick={isTerms ? submit : goNext}
-            className="w-full py-4 rounded-lg text-[15px] font-medium transition-all duration-200"
-            style={{
-              background: canNext[step] ? 'var(--color-primary)' : 'var(--color-surface)',
-              color: canNext[step] ? '#fff' : 'var(--color-text-muted)',
-              border: canNext[step] ? 'none' : '1px solid var(--color-border)',
-            }}
-          >
-            {isTerms ? '설문 제출하기' : '다음'}
-          </button>
+      {/* Header */}
+      <div style={{
+        position: 'absolute', top: 1, left: 0, right: 0, zIndex: 20,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '22px 24px 0', background: '#090a0a',
+      }}>
+        <div
+          onClick={goBack}
+          style={{
+            width: 32, height: 32, marginLeft: -8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', opacity: step === 0 ? 0 : 1,
+            pointerEvents: step === 0 ? 'none' : 'auto',
+          }}
+        >
+          <svg width="9" height="16" viewBox="0 0 9 16" fill="none">
+            <path d="M8 1L1 8l7 7" stroke="#f5f5f7" strokeWidth="1.1" />
+          </svg>
+        </div>
+        <div style={{ fontSize: 10, letterSpacing: '0.42em', color: '#7ab6af', fontWeight: 500 }}>ASTON MARTIN</div>
+        <div style={{ width: 32, textAlign: 'right', fontSize: 10, letterSpacing: '0.08em', color: '#525866', fontVariantNumeric: 'tabular-nums' }}>
+          {step + 1}/{STEPS.length}
+        </div>
+      </div>
+
+      {/* Content area */}
+      {key === 'model' && (
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 74, bottom: 104, display: 'flex', flexDirection: 'column', animation: 'amIn .22s ease both' }}>
+          <StepModel value={model} onChange={setModel} />
         </div>
       )}
+
+      {key === 'name' && (
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 74 }}>
+          <StepInput
+            tag="NAME"
+            label="성함을 알려주세요"
+            hint="상담 시 안내드릴 성함입니다."
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onEnter={goNext}
+            placeholder="홍길동"
+          />
+        </div>
+      )}
+
+      {key === 'phone' && (
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 74 }}>
+          <StepInput
+            tag="CONTACT"
+            label="연락처를 입력해 주세요"
+            hint="설문 결과 안내를 위해 사용됩니다."
+            value={phone}
+            onChange={(e) => setPhone(formatPhone(e.target.value))}
+            onEnter={goNext}
+            type="tel"
+            inputMode="numeric"
+            placeholder="010-0000-0000"
+          />
+        </div>
+      )}
+
+      {key === 'birth' && (
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 74 }}>
+          <StepInput
+            tag="DATE OF BIRTH"
+            label="생년월일을 입력해 주세요"
+            hint="8자리 숫자로 입력해 주세요. 예) 19900512"
+            value={birth}
+            onChange={(e) => setBirth(formatBirth(e.target.value))}
+            onEnter={goNext}
+            inputMode="numeric"
+            placeholder="YYYYMMDD"
+          />
+        </div>
+      )}
+
+      {key === 'email' && (
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 74 }}>
+          <StepEmail
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onEnter={goNext}
+          />
+        </div>
+      )}
+
+      {key === 'consent' && (
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 74, bottom: 104, overflowY: 'auto' }}>
+          <StepConsent agreed={agreed} onToggle={setAgreed} />
+        </div>
+      )}
+
+      {/* Bottom bar */}
+      {!done && (
+        <div style={{
+          position: 'absolute', left: 0, right: 0,
+          padding: '0 24px 22px',
+          background: 'linear-gradient(180deg, rgba(9,10,10,0) 0%, #090a0a 34%)',
+          zIndex: 15,
+          transition: 'bottom .18s ease',
+          bottom: kbOffset,
+        }}>
+          {!isLast && valid && (
+            <div
+              onClick={goNext}
+              style={{
+                height: 56, borderRadius: 2, background: '#006c62',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 15, fontWeight: 500, letterSpacing: '0.02em', color: '#f5f5f7',
+                cursor: 'pointer', animation: 'amFade .2s ease both',
+              }}
+            >
+              다음
+            </div>
+          )}
+          {!isLast && !valid && (
+            <div style={{
+              height: 56, borderRadius: 2, background: '#121416',
+              border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 15, fontWeight: 500, letterSpacing: '0.02em', color: '#525866',
+            }}>
+              다음
+            </div>
+          )}
+          {isLast && valid && (
+            <div
+              onClick={submit}
+              style={{
+                height: 56, borderRadius: 2, background: '#006c62',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 15, fontWeight: 500, letterSpacing: '0.04em', color: '#f5f5f7',
+                cursor: 'pointer', animation: 'amFade .2s ease both',
+              }}
+            >
+              상담 신청하기
+            </div>
+          )}
+          {isLast && !valid && (
+            <div style={{
+              height: 56, borderRadius: 2, background: '#121416',
+              border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 15, fontWeight: 500, letterSpacing: '0.04em', color: '#525866',
+            }}>
+              상담 신청하기
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Done overlay */}
+      {done && <StepDone onReset={reset} />}
     </div>
   )
 }
