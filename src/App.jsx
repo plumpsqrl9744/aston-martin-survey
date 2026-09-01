@@ -459,7 +459,6 @@ export default function App() {
           <StepInput
             tag="NAME"
             label="성함을 알려주세요"
-            hint="상담 시 안내드릴 성함입니다."
             value={name}
             onChange={(e) => setName(e.target.value)}
             onEnter={goNext}
@@ -473,7 +472,6 @@ export default function App() {
           <StepInput
             tag="CONTACT"
             label="연락처를 입력해 주세요"
-            hint="설문 결과 안내를 위해 사용됩니다."
             value={phone}
             onChange={(e) => setPhone(formatPhone(e.target.value))}
             onEnter={goNext}
@@ -489,7 +487,6 @@ export default function App() {
           <StepInput
             tag="DATE OF BIRTH"
             label="생년월일을 입력해 주세요"
-            hint="8자리 숫자로 입력해 주세요. 예) 19900512"
             value={birth}
             onChange={(e) => setBirth(formatBirth(e.target.value))}
             onEnter={goNext}
