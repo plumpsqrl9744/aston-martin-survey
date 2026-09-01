@@ -13,9 +13,14 @@ const MODELS = [
 const EMAIL_DOMAINS = ['@naver.com', '@gmail.com', '@daum.net', '@kakao.com']
 
 const TERMS = [
-  { id: 'privacy', label: '개인정보 수집 및 활용 동의', required: true },
-  { id: 'thirdParty', label: '공식 딜러사 제3자 제공 동의', required: true },
-  { id: 'marketing', label: '마케팅 및 프라이빗 이벤트 정보 수신', required: false },
+  {
+    id: 'privacy', label: '개인정보 수집 및 이용 동의', required: true,
+    detail: `1. 수집하는 개인정보의 항목: 성명, 연락처, 생년월일, 관심모델, 이메일주소\n2. 개인정보의 수집 및 이용 목적\n- 시승 서비스 제공: 서비스 제공을 위한 본인 확인, 분쟁조정을 위한 기록보존, 불만처리, 민원처리, 고지사항 전달\n- 판매, 마케팅 및 광고에 활용: 신규 서비스(제품 포함) 및 이벤트 정보 제공, 이벤트 경품 제공/배송, 행사 진행, 새로운 이벤트 안내(이메일, 전화, DM/SMS 발송) 인구 통계학적 특성에 따른 서비스 제공 및 광고게재를 위한 고객별 통계분석자료 활용, 시승제공\n- 고객 관리: 리서치, 서비스에 대한 만족도 조사, DM/SMS 발송, 차량관리 안내, 구매고객 서비스의 본인확인, 다양한 고객관리 프로그램 진행\n3. 개인정보의 보유 및 이용기간: 동의일로부터 2년\n4. 동의 거부 시 서비스 제공이 제한될 수 있습니다.`,
+  },
+  {
+    id: 'marketing', label: '마케팅 활용 동의', required: false,
+    detail: `1. 수집·이용 항목: 이름, 전화번호, 이메일주소, 관심차종, 생년월일\n2. 수집·이용 목적: 이벤트 초청 및 안내, 경품배송, 시승정보 제공, 신규 상품 및 프로모션 안내, 캠페인 및 제품 정보 제공을 위한 이메일/문자/카카오메시지 발송, 뉴스레터/매거진 발송, 고객별 통계 분석자료 활용\n3. 수집·이용자: 브리타니아오토 주식회사\n4. 보유 및 이용 기간: 목적 달성 시까지 또는 동의 철회 요청 시까지\n5. 마케팅 활용에 동의하시면, 브리타니아오토 주식회사와 Aston Martin Lagonda Ltd에서 제공하는 Aston Martin 관련 소식, 이벤트 안내, 혜택 알림 등 다양한 정보를 안내받으실 수 있습니다.`,
+  },
 ]
 
 const STEPS = ['model', 'name', 'phone', 'birth', 'email', 'consent']
@@ -197,6 +202,7 @@ function StepEmail({ value, onChange, onEnter }) {
 }
 
 function StepConsent({ agreed, onToggle }) {
+  const [openDetail, setOpenDetail] = useState(null)
   const allChecked = TERMS.every((t) => agreed[t.id])
 
   const toggleAll = () => {
@@ -209,7 +215,7 @@ function StepConsent({ agreed, onToggle }) {
   return (
     <div style={{ padding: '26px 24px 0', animation: 'amIn .22s ease both' }}>
       <div style={{ fontSize: 11, letterSpacing: '0.22em', color: '#525866', marginBottom: 14 }}>CONSENT</div>
-      <div style={{ fontSize: 23, lineHeight: 1.45, fontWeight: 500, marginBottom: 36 }}>수신 동의를 확인해 주세요</div>
+      <div style={{ fontSize: 23, lineHeight: 1.45, fontWeight: 500, marginBottom: 36 }}>개인정보 수집 및 이용 동의를 해주세요.</div>
 
       {/* 전체 동의 토글 */}
       <div
@@ -238,41 +244,50 @@ function StepConsent({ agreed, onToggle }) {
       </div>
 
       {/* 개별 항목 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 8 }}>
         {TERMS.map((t) => (
-          <div
-            key={t.id}
-            onClick={() => onToggle({ ...agreed, [t.id]: !agreed[t.id] })}
-            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', cursor: 'pointer' }}
-          >
-            <div style={{
-              width: 18, height: 18, borderRadius: '50%',
-              border: '1px solid rgba(255,255,255,0.14)', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
+          <div key={t.id}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', cursor: 'pointer' }}>
+              <div
+                onClick={() => onToggle({ ...agreed, [t.id]: !agreed[t.id] })}
+                style={{
+                  width: 18, height: 18, borderRadius: '50%',
+                  border: '1px solid rgba(255,255,255,0.14)', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <div style={{
+                  width: 8, height: 8, borderRadius: '50%', background: '#006c62',
+                  transition: 'opacity .2s ease', opacity: agreed[t.id] ? 1 : 0,
+                }} />
+              </div>
+              <div
+                onClick={() => onToggle({ ...agreed, [t.id]: !agreed[t.id] })}
+                style={{ flex: 1, fontSize: 13, color: '#525866', letterSpacing: '0.01em' }}
+              >
+                {t.required
+                  ? <><span style={{ color: '#7ab6af' }}>[필수]</span> {t.label}</>
+                  : `[선택] ${t.label}`
+                }
+              </div>
+              <div
+                onClick={(e) => { e.stopPropagation(); setOpenDetail(openDetail === t.id ? null : t.id) }}
+                style={{ fontSize: 11, color: '#525866', cursor: 'pointer', flexShrink: 0, padding: '4px 0' }}
+              >
+                {openDetail === t.id ? '접기' : '보기'}
+              </div>
+            </div>
+            {openDetail === t.id && (
               <div style={{
-                width: 8, height: 8, borderRadius: '50%', background: '#006c62',
-                transition: 'opacity .2s ease', opacity: agreed[t.id] ? 1 : 0,
-              }} />
-            </div>
-            <div style={{ fontSize: 13, color: '#525866', letterSpacing: '0.01em' }}>
-              {t.required
-                ? <><span style={{ color: '#7ab6af' }}>[필수]</span> {t.label}</>
-                : `[선택] ${t.label}`
-              }
-            </div>
+                padding: '12px 16px', marginBottom: 8, borderRadius: 4,
+                background: 'rgba(255,255,255,0.03)',
+                fontSize: 11, lineHeight: 1.8, color: '#525866', whiteSpace: 'pre-line',
+              }}>
+                {t.detail}
+              </div>
+            )}
           </div>
         ))}
-      </div>
-
-      {/* 법적 안내 */}
-      <div style={{
-        marginTop: 26, padding: '18px 0 30px',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        fontSize: 11, lineHeight: 1.85, color: '#525866',
-      }}>
-        수집 항목: 성함, 연락처, 생년월일, 이메일 · 보유 기간: 수집일로부터 1년<br />
-        동의를 거부하실 수 있으나, 이 경우 상담 안내가 제한됩니다.
       </div>
     </div>
   )
@@ -355,7 +370,7 @@ export default function App() {
       case 'phone': return phone.replace(/\D/g, '').length === 11
       case 'birth': return birth.replace(/\D/g, '').length === 8
       case 'email': return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email.trim())
-      case 'consent': return !!(agreed.privacy && agreed.thirdParty)
+      case 'consent': return !!agreed.privacy
       default: return false
     }
   })()
@@ -372,7 +387,6 @@ export default function App() {
       model: MODELS.find((m) => m.id === model)?.name,
       name, phone, birth, email,
       privacy: agreed.privacy ? 'Y' : 'N',
-      thirdParty: agreed.thirdParty ? 'Y' : 'N',
       marketing: agreed.marketing ? 'Y' : 'N',
       timestamp: new Date().toISOString(),
     }
