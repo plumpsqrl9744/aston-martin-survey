@@ -7,13 +7,13 @@ const BASE = import.meta.env.BASE_URL
 const MODELS = [
   { id: 'vantage-s', name: 'VANTAGE S', sub: 'Front-engine V8 · 665 PS', img: `${BASE}images/vantage.png` },
   { id: 'db12-s', name: 'DB12 S', sub: 'Super Tourer · 700 PS', img: `${BASE}images/db12.png` },
-  { id: 'dbx707', name: 'DBX707', sub: 'Luxury SUV · 707 PS', img: `${BASE}images/dbx707.png` },
+  { id: 'dbx-s', name: 'DBX S', sub: 'Luxury SUV · 707 PS', img: `${BASE}images/dbx707.png` },
 ]
 
 const EMAIL_DOMAINS = ['@naver.com', '@gmail.com', '@daum.net', '@kakao.com']
 
 const TERMS = [
-  { id: 'privacy', label: '개인정보 수집 및 이용 동의', required: true },
+  { id: 'privacy', label: '개인정보 수집 및 활용 동의', required: true },
   { id: 'thirdParty', label: '공식 딜러사 제3자 제공 동의', required: true },
   { id: 'marketing', label: '마케팅 및 프라이빗 이벤트 정보 수신', required: false },
 ]
@@ -46,7 +46,7 @@ function StepModel({ value, onChange }) {
       <div style={{ padding: '26px 24px 22px' }}>
         <div style={{ fontSize: 11, letterSpacing: '0.22em', color: '#525866', marginBottom: 14 }}>MODEL</div>
         <div style={{ fontSize: 23, lineHeight: 1.45, fontWeight: 500, letterSpacing: '-0.01em' }}>
-          어떤 모델에<br />가장 관심이 가시나요?
+          관심 모델을<br />선택해 주세요.
         </div>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -298,9 +298,9 @@ function StepDone({ onReset }) {
         </svg>
       </div>
       <div style={{ fontSize: 10, letterSpacing: '0.42em', color: '#7ab6af', marginBottom: 20 }}>REQUEST RECEIVED</div>
-      <div style={{ fontSize: 21, fontWeight: 500, lineHeight: 1.5, marginBottom: 16 }}>신청이 접수되었습니다</div>
+      <div style={{ fontSize: 21, fontWeight: 500, lineHeight: 1.5, marginBottom: 16 }}>방문 등록이 완료되었습니다</div>
       <div style={{ fontSize: 13, lineHeight: 1.9, color: '#525866' }}>
-        담당 세일즈 컨설턴트가 영업일 1일 내<br />입력하신 연락처로 안내드립니다.
+        등록해 주셔서 감사합니다.
       </div>
       <div
         onClick={onReset}
@@ -544,7 +544,7 @@ export default function App() {
                 cursor: 'pointer', animation: 'amFade .2s ease both',
               }}
             >
-              상담 신청하기
+              방문 등록하기
             </div>
           )}
           {isLast && !valid && (
@@ -554,7 +554,7 @@ export default function App() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 15, fontWeight: 500, letterSpacing: '0.04em', color: '#525866',
             }}>
-              상담 신청하기
+              방문 등록하기
             </div>
           )}
         </div>
