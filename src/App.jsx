@@ -547,15 +547,16 @@ export default function App() {
           )}
           {isLast && valid && (
             <div
-              onClick={submit}
+              onClick={!submitting ? submit : undefined}
               style={{
-                height: 56, borderRadius: 2, background: '#006c62',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                height: 56, borderRadius: 2, background: submitting ? '#004d46' : '#006c62',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 fontSize: 15, fontWeight: 500, letterSpacing: '0.04em', color: '#f5f5f7',
-                cursor: 'pointer', animation: 'amFade .2s ease both',
+                cursor: submitting ? 'default' : 'pointer', animation: 'amFade .2s ease both',
+                opacity: submitting ? 0.7 : 1, transition: 'opacity .2s, background .2s',
               }}
             >
-              방문 등록하기
+              {submitting ? <span className="am-spinner" /> : '방문 등록하기'}
             </div>
           )}
           {isLast && !valid && (
