@@ -388,7 +388,7 @@ export default function App() {
       name, phone, birth, email,
       privacy: agreed.privacy ? 'Y' : 'N',
       marketing: agreed.marketing ? 'Y' : 'N',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
     }
 
     if (GOOGLE_SCRIPT_URL) {
