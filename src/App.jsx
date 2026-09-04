@@ -217,30 +217,32 @@ function StepConsent({ agreed, onToggle }) {
       <div style={{ fontSize: 11, letterSpacing: '0.22em', color: '#525866', marginBottom: 14 }}>CONSENT</div>
       <div style={{ fontSize: 23, lineHeight: 1.45, fontWeight: 500, marginBottom: 36 }}>개인정보 수집 및 이용 동의를 해주세요.</div>
 
-      {/* 전체 동의 토글 */}
+      {/* 전체 동의 체크박스 */}
       <div
         onClick={toggleAll}
         style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-          padding: '18px 0',
+          display: 'flex', alignItems: 'center', gap: 14,
+          padding: '20px 0',
           borderTop: '1px solid rgba(255,255,255,0.08)',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
           cursor: 'pointer',
         }}
       >
-        <div style={{ fontSize: 15, fontWeight: 500, letterSpacing: '0.01em' }}>전체 동의하기</div>
         <div style={{
-          position: 'relative', width: 44, height: 24, borderRadius: 12, flexShrink: 0,
-          transition: 'background .3s ease',
-          background: allChecked ? '#006c62' : '#121416',
+          width: 26, height: 26, borderRadius: '50%',
+          border: `1.5px solid ${allChecked ? '#006c62' : 'rgba(255,255,255,0.14)'}`,
+          flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: allChecked ? '#006c62' : 'transparent',
+          transition: 'all .2s ease',
         }}>
-          <div style={{
-            position: 'absolute', top: 3, width: 18, height: 18, borderRadius: '50%',
-            background: '#f5f5f7',
-            transition: 'left .3s cubic-bezier(.4,0,.2,1)',
-            left: allChecked ? 23 : 3,
-          }} />
+          {allChecked && (
+            <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+              <path d="M1 4L4.5 7.5L11 1" stroke="#f5f5f7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
         </div>
+        <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.01em' }}>전체 동의하기</div>
       </div>
 
       {/* 개별 항목 */}
@@ -265,16 +267,21 @@ function StepConsent({ agreed, onToggle }) {
                 onClick={() => onToggle({ ...agreed, [t.id]: !agreed[t.id] })}
                 style={{ flex: 1, fontSize: 13, color: '#525866', letterSpacing: '0.01em' }}
               >
-                {t.required
-                  ? <><span style={{ color: '#7ab6af' }}>[필수]</span> {t.label}</>
-                  : `[선택] ${t.label}`
-                }
+                {t.label}
+              </div>
+              <div
+                onClick={() => onToggle({ ...agreed, [t.id]: !agreed[t.id] })}
+                style={{ fontSize: 11, color: '#525866', flexShrink: 0 }}
+              >
+                {t.required ? '필수' : '선택'}
               </div>
               <div
                 onClick={(e) => { e.stopPropagation(); setOpenDetail(openDetail === t.id ? null : t.id) }}
-                style={{ fontSize: 11, color: '#525866', cursor: 'pointer', flexShrink: 0, padding: '4px 0' }}
+                style={{ cursor: 'pointer', flexShrink: 0, padding: '4px 0', display: 'flex', alignItems: 'center' }}
               >
-                {openDetail === t.id ? '접기' : '보기'}
+                <svg width="12" height="7" viewBox="0 0 12 7" fill="none" style={{ transition: 'transform .2s ease', transform: openDetail === t.id ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                  <path d="M1 1l5 5 5-5" stroke="#525866" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
             </div>
             {openDetail === t.id && (
